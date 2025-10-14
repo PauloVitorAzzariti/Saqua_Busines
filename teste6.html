@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Saquabusines — Feed</title>
+
+  <!-- Fonte -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #ffffff;
+      --muted: #8b949e;
+      --accent: #0095f6;
+      --card: #ffffff;
+      --border: #e6edf3;
+      --glass: rgba(0,0,0,0.03);
+      --text:#0f1724;
+      --shadow: 0 4px 18px rgba(16,24,40,0.06);
+      --radius: 12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter, system-ui, Arial, sans-serif; -webkit-font-smoothing:antialiased;
+      background: linear-gradient(180deg,#fbfdff 0%, #f7fbff 100%); color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* NAVBAR (fixed) */
+    .navbar{
+      position:fixed; top:0; left:0; right:0; height:64px; display:flex; align-items:center; justify-content:center;
+      border-bottom:1px solid var(--border); background:rgba(255,255,255,0.96); z-index:40;
+      backdrop-filter: blur(6px);
+    }
+    .nav-inner{ width:100%; max-width:1100px; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; gap:12px; }
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#ff7a18,#ffd166);display:flex;align-items:center;justify-content:center;font-weight:700;color:#061220;
+      box-shadow: var(--shadow);
+    }
+    .app-title{font-weight:700;font-size:16px; margin:0}
+    .app-sub{font-size:12px;color:var(--muted); margin-top:2px}
+
+    .nav-actions{display:flex;align-items:center;gap:8px}
+    .icon-btn{background:transparent;border:0;padding:8px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--muted)}
+    .primary-btn{background:var(--accent);color:white;padding:8px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+
+    /* Layout */
+    .page{max-width:1100px;margin:84px auto 40px;padding:16px;display:grid;grid-template-columns:320px 1fr;gap:20px;}
+    .left, .right{display:flex;flex-direction:column;gap:16px}
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:12px; box-shadow:var(--shadow);
+    }
+
+    /* Sidebar */
+    .search-row{display:flex;gap:8px}
+    .search-row input, .search-row select{
+      padding:10px;border-radius:10px;border:1px solid var(--border);flex:1;background:white;color:var(--text);
+    }
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .tag{background:#f3f6fb;padding:6px 10px;border-radius:999px;font-size:13px;color:var(--muted);cursor:pointer;border:1px solid transparent}
+    .mute{color:var(--muted);font-size:13px}
+
+    /* Feed */
+    .feed-area{display:flex;flex-direction:column;gap:18px}
+    .post-card{
+      border-radius:16px;border:1px solid var(--border);overflow:hidden;background:white;
+      display:flex;flex-direction:column;box-shadow:var(--shadow);
+    }
+    .post-top{display:flex;align-items:center;gap:12px;padding:12px}
+    .avatar{width:46px;height:46px;border-radius:999px;object-fit:cover;border:1px solid var(--border)}
+    .post-meta-title{display:flex;flex-direction:column}
+    .post-meta-title strong{font-size:14px}
+    .post-meta-title span{font-size:13px;color:var(--muted)}
+    .post-image{width:100%;height:420px;object-fit:cover;background:#f0f2f5}
+    .post-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+    .post-desc{color:#172026;font-size:14px}
+    .post-footer{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-top:1px solid var(--border)}
+    .post-actions{display:flex;gap:8px}
+    .tag-ghost{background:#f7fafc;padding:6px 10px;border-radius:999px;font-size:13px;color:var(--muted);cursor:pointer;border:1px solid transparent}
+
+    /* Product small card (used below feed) */
+    .product-list{display:flex;flex-direction:column;gap:12px}
+    .product{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px;border-radius:12px;border:1px solid var(--border)}
+    .product img{width:84px;height:64px;border-radius:8px;object-fit:cover}
+
+    /* Modal */
+    .modal-back{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;padding:18px;z-index:999}
+    .modal{width:100%;max-width:720px;background:white;padding:18px;border-radius:12px;border:1px solid var(--border);max-height:88vh;overflow:auto}
+    label{font-size:13px;color:var(--muted);display:block;margin-top:8px}
+    input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:white;color:var(--text);margin-top:6px}
+    textarea{min-height:90px}
+
+    .flex-row{display:flex;gap:8px;align-items:center}
+    .right-align{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+
+    /* Responsividade */
+    @media (max-width:980px){
+      .page{grid-template-columns:1fr; padding:12px; margin-top:80px}
+      .left{order:2}
+      .right{order:1}
+      .post-image{height:320px}
+    }
+    @media (max-width:420px){
+      .post-image{height:260px}
+      .avatar{width:40px;height:40px}
+      .logo{width:34px;height:34px}
+      .nav-inner{padding:8px}
+    }
+
+    /* small helpers */
+    .muted{color:var(--muted);font-size:13px}
+    .ghost{background:transparent;border:1px solid var(--border);padding:8px 10px;border-radius:10px;cursor:pointer}
+    .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
+    code{background:#f4f7fb;padding:2px 6px;border-radius:6px;font-family:monospace;font-size:13px}
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="logo">SB</div>
+        <div>
+          <div class="app-title">Saquabusines</div>
+          <div class="app-sub">Rede local — descubra empresas</div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div id="currentUser" class="muted">Visitante</div>
+        <button class="icon-btn" id="btn-enter-client">Entrar Cliente</button>
+        <button class="icon-btn" id="btn-enter-vendor">Entrar Vendedor</button>
+        <button class="icon-btn" id="btn-enter-admin">Entrar Admin</button>
+        <button class="icon-btn" id="btn-logout" style="display:none">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE LAYOUT -->
+  <main class="page">
+    <!-- SIDEBAR -->
+    <aside class="left">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Buscar negócios</strong>
+          <span class="muted">Filtrar</span>
+        </div>
+
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="Pesquisar por nome, produto..." />
+          <select id="categoryFilter">
+            <option value="">Todas</option>
+            <option>Mercado</option>
+            <option>Roupas</option>
+            <option>Comida</option>
+            <option>Barbearia</option>
+            <option>Restaurante</option>
+            <option>Turismo</option>
+          </select>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="muted">Categorias</div>
+          <div class="tags" style="margin-top:8px">
+            <div class="tag" data-cat="Mercado">Mercado</div>
+            <div class="tag" data-cat="Roupas">Roupas</div>
+            <div class="tag" data-cat="Comida">Comida</div>
+            <div class="tag" data-cat="Restaurante">Restaurante</div>
+            <div class="tag" data-cat="Barbearia">Barbearia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="sidebar-actions">
+        <div class="muted">Faça login como admin ou vendedor para ver ações administrativas.</div>
+      </div>
+
+      <div class="card">
+        <strong>Como funciona</strong>
+        <p class="mute" style="margin-top:8px">Clientes: pesquisam e contatam via WhatsApp.<br>
+          Vendedores: gerenciam perfil e produtos.<br>
+          Admin: cadastra empresas, cria credenciais e publica anúncios.</p>
+      </div>
+
+      <div class="card">
+        <strong>Top categorias</strong>
+        <ul class="mute" style="padding-left:18px;margin:8px 0 0 0">
+          <li>Mercados</li>
+          <li>Roupas</li>
+          <li>Comida</li>
+          <li>Sushi & Pizza</li>
+          <li>Barbearia</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- FEED -->
+    <section class="right">
+      <div id="feedArea" class="feed-area"></div>
+    </section>
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-back" id="modalBack">
+    <div class="modal" id="modalContent"></div>
+  </div>
+
+<script>
+/* ------------------ Helpers & Seed ------------------ */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+function save(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+function load(key, fallback){ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+
+function seedInitialData(){
+  if(!localStorage.getItem('saqua.initialized')){
+    const vendors = [
+      { id:'v1', name:'Mercadão Central', description:'Produtos frescos, entregas rápidas', category:'Mercado', address:'Rua A, 123', whatsapp:'+5511999991111', avatarDataUrl:'', products:[
+         {id:uid(), title:'Arroz 5kg', desc:'Arroz comb. 5kg', price:'R$24,90', image:''},
+         {id:uid(), title:'Cerveja 350ml', desc:'Lata gelada', price:'R$4,50', image:''}
+      ], workingHours:'08:00 - 21:00', featured:true },
+      { id:'v2', name:'Sushix', description:'Sushi premium e combos', category:'Comida', address:'Av. B, 45', whatsapp:'+5511988882222', avatarDataUrl:'', products:[
+         {id:uid(), title:'Combo 8 peças', desc:'Salmão + atum', price:'R$49,90', image:''}
+      ], workingHours:'11:30 - 23:00', featured:false },
+    ];
+    const users = [
+      {id:'u_admin', role:'admin', username:'admin', password:'admin123'},
+      {id:'u_client', role:'client', username:'cliente', password:'cliente123'},
+      {id:'u_v1', role:'vendor', username:'vendedor1', password:'senha123', vendorId:'v1'}
+    ];
+    const posts = [
+      {id:uid(), vendorId:'v1', title:'Promoção de Arroz', description:'Arroz 5kg por R$19,90 só hoje!', mediaDataUrl:'', linkSaibaMais:'https://exemplo.com/promo-arroz', createdAt:Date.now(), createdBy:'admin'},
+      {id:uid(), vendorId:'v2', title:'Novo combo sushi', description:'Combo especial com 10 peças', mediaDataUrl:'', createdAt:Date.now() - 1000*60*60*24, createdBy:'vendor'}
+    ];
+    save('saqua.vendors', vendors);
+    save('saqua.users', users);
+    save('saqua.posts', posts);
+    localStorage.setItem('saqua.initialized','1');
+  }
+}
+seedInitialData();
+
+/* Small helpers */
+function svgPlaceholder(){
+  return `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='400'><rect width='100%' height='100%' fill='#f3f5f7'/><text x='50%' y='50%' fill='#9aa6b2' font-size='18' dominant-baseline='middle' text-anchor='middle'>Imagem</text></svg>`;
+}
+function escapeHTML(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function buildWhatsAppUrl(number, text){
+  const num = (number||'').replace(/\D/g,'');
+  return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+}
+function openModal(renderFn){
+  modalBack.style.display = 'flex';
+  modalContent.innerHTML = '';
+  renderFn(modalContent);
+}
+function closeModal(){ modalBack.style.display = 'none'; modalContent.innerHTML = ''; }
+
+/* ------------------ STATE ------------------ */
+let STATE = { currentUser: null };
+
+/* ------------------ AUTH ------------------ */
+function login(username, password){
+  const users = load('saqua.users', []);
+  const u = users.find(x => x.username === username && x.password === password);
+  if(u){
+    STATE.currentUser = {...u};
+    renderTop();
+    return true;
+  }
+  return false;
+}
+function logout(){
+  STATE.currentUser = null;
+  renderTop();
+}
+
+/* ------------------ Render top & sidebar actions ------------------ */
+function renderTop(){
+  const el = document.getElementById('currentUser');
+  el.textContent = STATE.currentUser ? `${STATE.currentUser.role.toUpperCase()}: ${STATE.currentUser.username}` : 'Visitante';
+  document.getElementById('btn-logout').style.display = STATE.currentUser ? 'inline-block' : 'none';
+  renderSidebarActions();
+  renderFeed();
+}
+
+function renderSidebarActions(){
+  const box = document.getElementById('sidebar-actions');
+  box.innerHTML = '';
+  if(STATE.currentUser && STATE.currentUser.role === 'admin'){
+    box.innerHTML = `
+      <strong>Painel Admin</strong>
+      <div style="margin-top:8px" class="muted">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="ghost" id="btn-admin-create-vendor">Cadastrar vendedor</button>
+          <button class="ghost" id="btn-admin-list">Listar empresas</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn" id="btn-admin-create-post">Criar anúncio</button>
+        </div>
+      </div>
+    `;
+    box.querySelector('#btn-admin-create-vendor').onclick = () => openModal(renderAdminCreateVendor);
+    box.querySelector('#btn-admin-list').onclick = () => openModal(renderAdminListVendors);
+    box.querySelector('#btn-admin-create-post').onclick = () => openModal(renderAdminCreatePost);
+  } else if (STATE.currentUser && STATE.currentUser.role === 'vendor'){
+    box.innerHTML = `
+      <strong>Painel Vendedor</strong>
+      <div style="margin-top:8px" class="muted">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <button class="ghost" id="btn-vendor-products">Meus produtos</button>
+          <button class="ghost" id="btn-vendor-add-product">Adicionar produto</button>
+          <button class="ghost" id="btn-vendor-my-posts">Meus anúncios (feed)</button>
+        </div>
+      </div>
+    `;
+    box.querySelector('#btn-vendor-products').onclick = () => openModal(modal => renderVendorProductsModal(modal));
+    box.querySelector('#btn-vendor-add-product').onclick = () => openModal(modal => renderVendorAddProductModal(modal));
+    box.querySelector('#btn-vendor-my-posts').onclick = () => {
+      renderFeed();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+  } else {
+    box.innerHTML = `<div class="muted">Faça login como admin ou vendedor para ver ações administrativas.</div>`;
+  }
+}
+
+/* ------------------ Feed rendering (inclui produtos automáticos) ------------------ */
+function renderFeed(){
+  // load posts and vendors
+  const postsAll = load('saqua.posts', []).slice().sort((a,b) => b.createdAt - a.createdAt);
+  const vendors = load('saqua.vendors', []);
+  const feedEl = document.getElementById('feedArea');
+  feedEl.innerHTML = '';
+
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const cat = (document.getElementById('categoryFilter')?.value || '');
+
+  let posts = postsAll.slice();
+
+  // Adicionar produtos dos vendedores como posts automáticos (apenas se ainda não viraram posts com productId)
+  vendors.forEach(v => {
+    v.products.forEach(prod => {
+      if(!posts.some(p => p.vendorId === v.id && p.productId === prod.id)){
+        posts.push({
+          id: uid(),
+          vendorId: v.id,
+          productId: prod.id,
+          title: prod.title,
+          description: prod.desc + ' • ' + prod.price,
+          mediaDataUrl: prod.image,
+          createdAt: Date.now(),
+          createdBy: 'vendor'
+        });
+      }
+    });
+  });
+
+  // Se admin, mostrar um card de atalho para ações
+  if(STATE.currentUser && STATE.currentUser.role === 'admin'){
+    const adminCard = document.createElement('div');
+    adminCard.className = 'card';
+    adminCard.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Painel Admin</strong>
+        <div style="display:flex;gap:8px">
+          <button class="ghost" id="btn-admin-create-vendor-2">Cadastrar</button>
+          <button class="ghost" id="btn-admin-list-2">Listar</button>
+          <button class="btn" id="btn-admin-create-post-2">Criar anúncio</button>
+        </div>
+      </div>
+    `;
+    feedEl.appendChild(adminCard);
+    adminCard.querySelector('#btn-admin-create-vendor-2').onclick = () => openModal(renderAdminCreateVendor);
+    adminCard.querySelector('#btn-admin-list-2').onclick = () => openModal(renderAdminListVendors);
+    adminCard.querySelector('#btn-admin-create-post-2').onclick = () => openModal(renderAdminCreatePost);
+  }
+
+  for(const p of posts.sort((a,b)=>b.createdAt - a.createdAt)){
+    const v = vendors.find(x => x.id === p.vendorId) || { name:'Empresa' };
+    const combinedText = (p.title + ' ' + p.description + ' ' + v.name + ' ' + (v.category || '')).toLowerCase();
+    if(q && !combinedText.includes(q)) continue;
+    if(cat && v.category !== cat) continue;
+
+    const postCard = document.createElement('article');
+    postCard.className = 'post-card card';
+
+    postCard.innerHTML = `
+      <div class="post-top">
+        <img class="avatar" src="${v.avatarDataUrl || 'data:image/svg+xml;utf8,' + encodeURIComponent(svgPlaceholder())}" alt="Avatar">
+        <div class="post-meta-title">
+          <strong>${escapeHTML(v.name)}</strong>
+          <span>${escapeHTML(v.category || 'Geral')} • ${new Date(p.createdAt).toLocaleString()}</span>
+        </div>
+      </div>
+      <img class="post-image" src="${p.mediaDataUrl || 'data:image/svg+xml;utf8,' + encodeURIComponent(svgPlaceholder())}" alt="Imagem do post">
+      <div class="post-body">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="post-desc">${escapeHTML(p.title)}</div>
+          <div class="muted small">${p.duration ? `${p.duration} dia(s)` : ''}</div>
+        </div>
+        <p class="post-desc">${escapeHTML(p.description)}</p>
+        ${p.duration ? `<div class="muted small">Valor estimado: R$${(4*p.duration).toFixed(2)}</div>` : ''}
+      </div>
+      <div class="post-footer">
+        <div class="post-actions">
+          <span class="tag-ghost view-profile" style="cursor:pointer">Ver perfil</span>
+          ${p.linkSaibaMais && p.createdBy === 'admin' ? `<span class="tag-ghost saiba-mais" style="cursor:pointer">Saiba mais</span>` : ''}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn contact-btn" data-vendor="${v.id}" data-post="${p.id}">Contatar</button>
+          ${STATE.currentUser && STATE.currentUser.role === 'vendor' && STATE.currentUser.vendorId === v.id ? `<button class="ghost" data-edit="${p.id}">Editar</button>` : ''}
+          ${STATE.currentUser && STATE.currentUser.role === 'admin' ? `<button class="ghost" data-delete="${p.id}">Excluir</button>` : ''}
+        </div>
+      </div>
+    `;
+
+    feedEl.appendChild(postCard);
+
+    // Actions
+    const contactBtn = postCard.querySelector('.contact-btn');
+    contactBtn.onclick = (e) => {
+      const vid = e.currentTarget.dataset.vendor;
+      const vendor = vendors.find(x => x.id === vid);
+      if(vendor && vendor.whatsapp){
+        window.open(buildWhatsAppUrl(vendor.whatsapp, `Olá ${vendor.name}, vi o anúncio "${p.title}" no Saquabusines.`), '_blank');
+      } else alert('WhatsApp não configurado para este estabelecimento.');
+    };
+
+    const editBtn = postCard.querySelector('[data-edit]');
+    if(editBtn) editBtn.onclick = () => openModal(modal => renderEditPostModal(modal, p));
+
+    const delBtn = postCard.querySelector('[data-delete]');
+    if(delBtn) delBtn.onclick = () => {
+      if(confirm('Excluir este anúncio?')){
+        deletePost(p.id);
+        renderFeed();
+      }
+    };
+
+    // Ver perfil
+    const viewProfileBtn = postCard.querySelector('.view-profile');
+    if(viewProfileBtn){
+      viewProfileBtn.onclick = () => {
+        const vendor = vendors.find(x => x.id === p.vendorId);
+        if(!vendor){ alert('Empresa não encontrada'); return; }
+        openModal(modal => {
+          modal.innerHTML = `
+            <div style="display:flex;gap:12px;align-items:center">
+              <img class="avatar" src="${vendor.avatarDataUrl || 'data:image/svg+xml;utf8,' + encodeURIComponent(svgPlaceholder())}" alt="Avatar" style="width:86px;height:86px;border-radius:14px">
+              <div>
+                <h3>${escapeHTML(vendor.name)}</h3>
+                <div class="muted">${escapeHTML(vendor.category || 'Geral')}</div>
+                <div class="muted" style="margin-top:6px">${escapeHTML(vendor.address || '')}</div>
+                <div class="muted" style="margin-top:6px">Horário: ${escapeHTML(vendor.workingHours || '')}</div>
+              </div>
+            </div>
+            <p style="margin-top:10px">${escapeHTML(vendor.description || '')}</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
+              ${vendor.products.map(prod => `
+                <div style="border:1px solid ${'var(--border)'};padding:8px;border-radius:10px">
+                  <img src="${prod.image || 'data:image/svg+xml;utf8,' + encodeURIComponent(svgPlaceholder())}" alt="" style="width:100%;height:90px;object-fit:cover;border-radius:8px">
+                  <div style="margin-top:8px"><strong>${escapeHTML(prod.title)}</strong></div>
+                  <div class="muted" style="font-size:13px">${escapeHTML(prod.desc)} • ${escapeHTML(prod.price||'')}</div>
+                </div>
+              `).join('')}
+            </div>
+            <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-start">
+              ${vendor.whatsapp ? `<button class="btn" id="contactWhatsapp">Contatar via WhatsApp</button>` : ''}
+              <button class="ghost" onclick="closeModal()">Fechar</button>
+            </div>
+          `;
+          const btn = modal.querySelector('#contactWhatsapp');
+          if(btn) btn.onclick = () => {
+            window.open(buildWhatsAppUrl(vendor.whatsapp, `Olá ${vendor.name}, vi sua empresa no Saquabusines.`), '_blank');
+          };
+        });
+      };
+    }
+
+    // Saiba mais (only present if admin added link)
+    const saibaBtn = postCard.querySelector('.saiba-mais');
+    if(saibaBtn){
+      saibaBtn.onclick = () => {
+        if(p.linkSaibaMais){
+          window.open(p.linkSaibaMais, '_blank');
+        }
+      };
+    }
+  } // end for posts
+
+  if(feedEl.childNodes.length === 0){
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.innerHTML = `<div class="muted">Nenhum anúncio encontrado.</div>`;
+    feedEl.appendChild(c);
+  }
+}
+
+/* ------------------ Admin: criar anúncio (com duração e simulação) ------------------ */
+function renderAdminCreatePost(modal){
+  const vendors = load('saqua.vendors', []);
+  if(vendors.length === 0){
+    modal.innerHTML = `<p>Não há empresas cadastradas para criar anúncios.</p>`;
+    return;
+  }
+  modal.innerHTML = `<h3>Criar anúncio para empresa</h3>
+    <label>Empresa</label>
+    <select id="admin-post-vendor">${vendors.map(v => `<option value="${v.id}">${escapeHTML(v.name)}</option>`).join('')}</select>
+    <label>Título</label><input id="new-title" />
+    <label>Descrição</label><textarea id="new-desc"></textarea>
+    <label>Duração (dias 1-30)</label><input type="number" id="new-duration" value="1" min="1" max="30"/>
+    <div class="small muted">Custo estimado: <span id="simul-cost">R$4,00</span></div>
+    <label>Imagem (opcional)</label><input type="file" id="new-media" accept="image/*" />
+    <label>Link "Saiba mais" (opcional)</label><input id="new-link" placeholder="https://exemplo.com" />
+    <div class="right-align">
+      <button class="ghost" id="create-cancel">Cancelar</button>
+      <button class="btn" id="create-save">Publicar</button>
+    </div>`;
+  const durationInput = modal.querySelector('#new-duration');
+  const simulCost = modal.querySelector('#simul-cost');
+  durationInput.oninput = () => simulCost.textContent = `R$${(4*parseInt(durationInput.value||1)).toFixed(2)}`;
+
+  modal.querySelector('#create-cancel').onclick = closeModal;
+  modal.querySelector('#create-save').onclick = async () => {
+    const vendorId = modal.querySelector('#admin-post-vendor').value;
+    const title = modal.querySelector('#new-title').value.trim();
+    const desc = modal.querySelector('#new-desc').value.trim();
+    const duration = Math.min(Math.max(parseInt(modal.querySelector('#new-duration').value||1),1),30);
+    const fileInput = modal.querySelector('#new-media');
+    const link = modal.querySelector('#new-link').value.trim();
+    if(!vendorId || !title || !desc){
+      alert('Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    let mediaDataUrl = '';
+    if(fileInput.files && fileInput.files[0]){
+      mediaDataUrl = await new Promise(res=>{
+        const reader = new FileReader();
+        reader.onload = e=>res(e.target.result);
+        reader.readAsDataURL(fileInput.files[0]);
+      });
+    }
+
+    const posts = load('saqua.posts', []);
+    posts.push({
+      id: uid(),
+      vendorId,
+      title,
+      description: desc,
+      duration,
+      mediaDataUrl,
+      linkSaibaMais: link || '',
+      createdAt: Date.now(),
+      createdBy: 'admin'
+    });
+    save('saqua.posts', posts);
+    closeModal();
+    renderFeed();
+  };
+}
+
+/* ------------------ Admin: criar/listar vendedores ------------------ */
+function renderAdminCreateVendor(modal){
+  modal.innerHTML = `<h3>Cadastrar Empresa / Vendedor</h3>
+    <div class="row">
+      <div>
+        <label>Nome da empresa</label><input id="adm_name">
+        <label>Categoria</label><input id="adm_cat" placeholder="Ex: Mercado">
+        <label>Endereço</label><input id="adm_addr">
+        <label>WhatsApp (+55...)</label><input id="adm_wh" placeholder="+5511999...">
+        <label>Descrição</label><textarea id="adm_desc"></textarea>
+        <label>Horário de atendimento</label><input id="adm_hours" placeholder="08:00 - 20:00">
+        <label>Usuário do vendedor</label><input id="adm_username" placeholder="login do vendedor">
+        <label>Senha do vendedor</label><input id="adm_password" placeholder="senha">
+        <div class="right-align">
+          <button class="ghost" id="adm_cancel">Cancelar</button>
+          <button class="btn" id="adm_save">Salvar e criar credenciais</button>
+        </div>
+      </div>
+    </div>`;
+  modal.querySelector('#adm_cancel').onclick = closeModal;
+  modal.querySelector('#adm_save').onclick = () => {
+    const name = modal.querySelector('#adm_name').value.trim();
+    const username = modal.querySelector('#adm_username').value.trim();
+    const password = modal.querySelector('#adm_password').value.trim();
+    if(!name || !username || !password){
+      alert('Nome, usuário e senha são obrigatórios.');
+      return;
+    }
+    const vendors = load('saqua.vendors', []);
+    const vId = uid();
+    const vendor = {
+      id: vId,
+      name,
+      category: modal.querySelector('#adm_cat').value.trim(),
+      address: modal.querySelector('#adm_addr').value.trim(),
+      whatsapp: modal.querySelector('#adm_wh').value.trim(),
+      description: modal.querySelector('#adm_desc').value.trim(),
+      products: [],
+      workingHours: modal.querySelector('#adm_hours').value.trim(),
+      avatarDataUrl: '',
+      featured: false
+    };
+    vendors.push(vendor);
+    save('saqua.vendors', vendors);
+
+    const users = load('saqua.users', []);
+    users.push({
+      id: uid(),
+      role: 'vendor',
+      username,
+      password,
+      vendorId: vId
+    });
+    save('saqua.users', users);
+
+    modal.innerHTML = `<h3>Vendedor criado</h3>
+      <div class="card">
+        <strong>${escapeHTML(vendor.name)}</strong>
+        <p class="muted">Usuário: <code>${escapeHTML(username)}</code><br>Senha: <code>${escapeHTML(password)}</code></p>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button class="btn" id="adm_done">Fechar</button>
+      </div>`;
+    modal.querySelector('#adm_done').onclick = () => {
+      closeModal();
+      renderTop();
+    };
+  };
+}
+
+function renderAdminListVendors(modal){
+  const vendors = load('saqua.vendors', []);
+  const users = load('saqua.users', []);
+  modal.innerHTML = `<h3>Empresas cadastradas (${vendors.length})</h3>
+    <div id="adm_list" style="max-height:400px; overflow:auto;"></div>
+    <div style="display:flex;justify-content:flex-end; margin-top:12px">
+      <button class="ghost" id="adm_close">Fechar</button>
+    </div>`;
+  modal.querySelector('#adm_close').onclick = closeModal;
+  const list = modal.querySelector('#adm_list');
+  vendors.forEach(v => {
+    const user = users.find(u => u.role === 'vendor' && u.vendorId === v.id);
+    const username = user ? user.username : '(sem usuário)';
+    const password = user ? user.password : '(sem senha)';
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.style.marginBottom = '8px';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>${escapeHTML(v.name)}</strong>
+          <div class="muted" style="margin-top:6px">${escapeHTML(v.category||'')} • ${escapeHTML(v.address||'')}</div>
+          <div class="muted" style="margin-top:6px">Credenciais → Usuário: <code>${escapeHTML(username)}</code> | Senha: <code>${escapeHTML(password)}</code></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="ghost" data-view="${v.id}">Ver perfil</button>
+          <button class="ghost" data-deluser="${v.id}">Excluir acesso</button>
+        </div>
+      </div>`;
+    list.appendChild(d);
+    d.querySelector('[data-view]').onclick = () => {
+      openModal(inner => {
+        inner.innerHTML = `
+          <div style="display:flex;gap:12px;align-items:center">
+            <img class="avatar" src="${v.avatarDataUrl || 'data:image/svg+xml;utf8,' + encodeURIComponent(svgPlaceholder())}" alt="Avatar" style="width:86px;height:86px;border-radius:14px">
+            <div>
+              <h3>${escapeHTML(v.name)}</h3>
+              <div class="muted">${escapeHTML(v.category || 'Geral')}</div>
+              <div class="muted" style="margin-top:6px">${escapeHTML(v.address || '')}</div>
+              <div class="muted" style="margin-top:6px">Horário: ${escapeHTML(v.workingHours||'')}</div>
+            </div>
+          </div>
+          <p style="margin-top:10px">${escapeHTML(v.description||'')}</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px">
+            ${v.products.map(prod => `
+              <div style="border:1px solid ${'var(--border)'};padding:8px;border-radius:10px">
+                <img src="${prod.image || 'data:image/svg+xml;utf8,' + encodeURIComponent(svgPlaceholder())}" alt="" style="width:100%;height:90px;object-fit:cover;border-radius:8px">
+                <div style="margin-top:8px"><strong>${escapeHTML(prod.title)}</strong></div>
+                <div class="muted" style="font-size:13px">${escapeHTML(prod.desc)} • ${escapeHTML(prod.price||'')}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-start">
+            ${v.whatsapp ? `<button class="btn" id="contactWhatsapp">Contatar via WhatsApp</button>` : ''}
+            <button class="ghost" onclick="closeModal()">Fechar</button>
+          </div>
+        `;
+        const btn = inner.querySelector('#contactWhatsapp');
+        if(btn) btn.onclick = () => {
+          window.open(buildWhatsAppUrl(v.whatsapp, `Olá ${v.name}, vi sua empresa no Saquabusines.`), '_blank');
+        };
+      });
+    };
+    d.querySelector('[data-deluser]').onclick = () => {
+      if(confirm('Excluir acesso deste vendedor? Isso removerá o usuário e anúncios.')){
+        const usersArr = load('saqua.users', []);
+        const newUsers = usersArr.filter(u => !(u.role === 'vendor' && u.vendorId === v.id));
+        save('saqua.users', newUsers);
+        const postsArr = load('saqua.posts', []);
+        const newPosts = postsArr.filter(p => p.vendorId !== v.id);
+        save('saqua.posts', newPosts);
+        const vendorsArr = load('saqua.vendors', []);
+        save('saqua.vendors', vendorsArr.filter(x => x.id !== v.id));
+        renderAdminListVendors(modal);
+        renderTop();
+      }
+    };
+  });
+}
+
+/* ------------------ Editar Anúncio ------------------ */
+function renderEditPostModal(modal, post){
+  modal.innerHTML = `<h3>Editar anúncio</h3>
+    <label>Título</label><input id="edit-title" value="${escapeHTML(post.title)}"/>
+    <label>Descrição</label><textarea id="edit-desc">${escapeHTML(post.description)}</textarea>
+    <label>Imagem (substituir)</label><input type="file" id="edit-media" accept="image/*" />
+    <label>Link "Saiba mais" (opcional)</label><input id="edit-link" placeholder="https://exemplo.com" value="${escapeHTML(post.linkSaibaMais||'')}" />
+    <div class="right-align">
+      <button class="ghost" id="edit-cancel">Fechar</button>
+      <button class="btn" id="edit-save">Salvar</button>
+    </div>`;
+  modal.querySelector('#edit-cancel').onclick = closeModal;
+
+  modal.querySelector('#edit-save').onclick = async () => {
+    const postsArr = load('saqua.posts', []);
+    const idx = postsArr.findIndex(x => x.id === post.id);
+    if(idx > -1){
+      postsArr[idx].title = modal.querySelector('#edit-title').value;
+      postsArr[idx].description = modal.querySelector('#edit-desc').value;
+      postsArr[idx].linkSaibaMais = modal.querySelector('#edit-link').value.trim() || '';
+      const fileInput = modal.querySelector('#edit-media');
+      if(fileInput.files && fileInput.files[0]){
+        const mediaDataUrl = await new Promise(res=>{
+          const reader = new FileReader();
+          reader.onload = e => res(e.target.result);
+          reader.readAsDataURL(fileInput.files[0]);
+        });
+        postsArr[idx].mediaDataUrl = mediaDataUrl;
+      }
+      save('saqua.posts', postsArr);
+    }
+    closeModal();
+    renderFeed();
+  };
+}
+
+/* ------------------ Delete post ------------------ */
+function deletePost(postId){
+  const postsArr = load('saqua.posts', []);
+  save('saqua.posts', postsArr.filter(x => x.id !== postId));
+}
+
+/* ------------------ Vendor products management ------------------ */
+function renderVendorProductsModal(modal){
+  const vendors = load('saqua.vendors', []);
+  const v = vendors.find(x => x.id === STATE.currentUser.vendorId);
+  if(!v){ modal.innerHTML = `<p>Perfil da empresa não encontrado.</p>`; return; }
+  modal.innerHTML = `<h3>Meus produtos (${v.products.length})</h3>
+    <div id="vendor_prod_list" style="max-height:400px;overflow:auto;margin-top:8px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button class="ghost" onclick="closeModal()">Fechar</button>
+    </div>`;
+  const list = modal.querySelector('#vendor_prod_list');
+  v.products.forEach(prod => {
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.style.marginBottom='8px';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>${escapeHTML(prod.title)}</strong>
+          <div class="muted">${escapeHTML(prod.desc)} • ${escapeHTML(prod.price||'')}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="ghost" data-edit="${prod.id}">Editar</button>
+          <button class="ghost" data-del="${prod.id}">Excluir</button>
+        </div>
+      </div>`;
+    list.appendChild(d);
+
+    d.querySelector('[data-edit]').onclick = () => openModal(inner => renderVendorEditProductModal(inner, v.id, prod));
+    d.querySelector('[data-del]').onclick = () => {
+      if(confirm('Excluir este produto?')){
+        v.products = v.products.filter(x => x.id !== prod.id);
+        const vendorsArr = load('saqua.vendors', []);
+        const idx = vendorsArr.findIndex(x => x.id === v.id);
+        if(idx > -1){ vendorsArr[idx] = v; save('saqua.vendors', vendorsArr); }
+        renderVendorProductsModal(modal);
+        renderTop();
+      }
+    };
+  });
+}
+
+function renderVendorAddProductModal(modal){
+  modal.innerHTML = `<h3>Adicionar produto</h3>
+    <label>Título</label><input id="prod-title" />
+    <label>Descrição</label><textarea id="prod-desc"></textarea>
+    <label>Preço</label><input id="prod-price" />
+    <label>Imagem (opcional)</label><input type="file" id="prod-image" accept="image/*" />
+    <div class="right-align">
+      <button class="ghost" id="prod-cancel">Cancelar</button>
+      <button class="btn" id="prod-save">Salvar</button>
+    </div>`;
+  modal.querySelector('#prod-cancel').onclick = closeModal;
+  modal.querySelector('#prod-save').onclick = async () => {
+    const title = modal.querySelector('#prod-title').value.trim();
+    const desc = modal.querySelector('#prod-desc').value.trim();
+    const price = modal.querySelector('#prod-price').value.trim();
+    const fileInput = modal.querySelector('#prod-image');
+    if(!title || !desc) { alert('Título e descrição obrigatórios.'); return; }
+    let img = '';
+    if(fileInput.files && fileInput.files[0]){
+      img = await new Promise(res=>{
+        const reader = new FileReader(); reader.onload = e => res(e.target.result); reader.readAsDataURL(fileInput.files[0]);
+      });
+    }
+    const vendorsArr = load('saqua.vendors', []);
+    const idx = vendorsArr.findIndex(x => x.id === STATE.currentUser.vendorId);
+    if(idx === -1){ alert('Empresa não encontrada'); return; }
+    vendorsArr[idx].products.push({ id: uid(), title, desc, price, image: img });
+    save('saqua.vendors', vendorsArr);
+    closeModal();
+    renderTop();
+  };
+}
+
+function renderVendorEditProductModal(modal, vendorId, prod){
+  modal.innerHTML = `<h3>Editar produto</h3>
+    <label>Título</label><input id="prod-title" value="${escapeHTML(prod.title)}" />
+    <label>Descrição</label><textarea id="prod-desc">${escapeHTML(prod.desc)}</textarea>
+    <label>Preço</label><input id="prod-price" value="${escapeHTML(prod.price||'')}" />
+    <label>Imagem (substituir)</label><input type="file" id="prod-image" accept="image/*" />
+    <div class="right-align">
+      <button class="ghost" id="prod-cancel">Cancelar</button>
+      <button class="btn" id="prod-save">Salvar</button>
+    </div>`;
+  modal.querySelector('#prod-cancel').onclick = closeModal;
+  modal.querySelector('#prod-save').onclick = async () => {
+    const title = modal.querySelector('#prod-title').value.trim();
+    const desc = modal.querySelector('#prod-desc').value.trim();
+    const price = modal.querySelector('#prod-price').value.trim();
+    const fileInput = modal.querySelector('#prod-image');
+    if(!title || !desc){ alert('Título e descrição obrigatórios.'); return; }
+    const vendorsArr = load('saqua.vendors', []);
+    const vIdx = vendorsArr.findIndex(x => x.id === vendorId);
+    if(vIdx === -1){ alert('Empresa não encontrada'); return; }
+    const prodIdx = vendorsArr[vIdx].products.findIndex(x => x.id === prod.id);
+    if(prodIdx === -1){ alert('Produto não encontrado'); return; }
+    vendorsArr[vIdx].products[prodIdx].title = title;
+    vendorsArr[vIdx].products[prodIdx].desc = desc;
+    vendorsArr[vIdx].products[prodIdx].price = price;
+    if(fileInput.files && fileInput.files[0]){
+      const img = await new Promise(res=>{
+        const reader = new FileReader(); reader.onload = e => res(e.target.result); reader.readAsDataURL(fileInput.files[0]);
+      });
+      vendorsArr[vIdx].products[prodIdx].image = img;
+    }
+    save('saqua.vendors', vendorsArr);
+    closeModal();
+    renderTop();
+  };
+}
+
+/* ------------------ Admin ad simulation (visitor modal) ------------------ */
+let visitorAdTimer = 0;
+function checkVisitorAds(){
+  if(!STATE.currentUser || STATE.currentUser.role === 'client'){
+    visitorAdTimer++;
+    const posts = load('saqua.posts', []).filter(p=>p.createdBy === 'admin');
+    if(visitorAdTimer % 6 === 0 && posts.length){
+      const randomPost = posts[Math.floor(Math.random() * posts.length)];
+      openModal(modal=>{
+        modal.innerHTML = `<h3>${escapeHTML(randomPost.title)}</h3>
+          <p>${escapeHTML(randomPost.description)}</p>
+          <p><strong>Duração:</strong> ${randomPost.duration || 1} dias</p>
+          <p><strong>Valor estimado:</strong> R$${(4*(randomPost.duration||1)).toFixed(2)}</p>
+          ${randomPost.mediaDataUrl ? `<img src="${randomPost.mediaDataUrl}" style="width:100%;max-height:300px;object-fit:cover;margin-top:8px;border-radius:8px"/>` : ''}
+          ${randomPost.linkSaibaMais ? `<p style="margin-top:8px"><a href="${randomPost.linkSaibaMais}" target="_blank">Saiba mais</a></p>` : ''}
+          <div style="text-align:right;margin-top:12px"><button class="ghost" onclick="closeModal()">Fechar</button></div>`;
+      });
+    }
+  }
+}
+window.addEventListener('scroll', checkVisitorAds);
+setInterval(checkVisitorAds, 60000);
+
+/* ------------------ Events & bindings ------------------ */
+document.getElementById('btn-enter-client').onclick = () => {
+  if(login('cliente','cliente123')) alert('Logado como cliente (visualização)');
+};
+document.getElementById('btn-enter-vendor').onclick = () => {
+  const u = prompt('Usuário do vendedor:','vendedor1');
+  const p = prompt('Senha:','senha123');
+  if(login(u,p)) { alert('Logado como vendedor'); } else { alert('Credenciais inválidas'); }
+};
+document.getElementById('btn-enter-admin').onclick = () => {
+  const u = prompt('Usuário admin:','admin');
+  const p = prompt('Senha:','admin123');
+  if(login(u,p)) { alert('Logado como admin'); } else { alert('Credenciais inválidas'); }
+};
+document.getElementById('btn-logout').onclick = () => {
+  logout();
+  alert('Desconectado');
+};
+
+document.getElementById('searchInput').oninput = renderFeed;
+document.getElementById('categoryFilter').onchange = renderFeed;
+document.querySelectorAll('.left .tag, .tags .tag').forEach(t => {
+  t.onclick = () => { document.getElementById('categoryFilter').value = t.dataset.cat; renderFeed(); };
+});
+
+/* initial render */
+renderTop();
+
+/* Expose modal elements for helpers */
+const modalBack = document.getElementById('modalBack');
+const modalContent = document.getElementById('modalContent');
+</script>
+</body>
+</html>
