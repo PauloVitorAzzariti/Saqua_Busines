@@ -53,11 +53,11 @@ function openModal(renderFn){
   modalContent.innerHTML = '';
   renderFn(modalContent);
 }
-function closeModal(){ 
+function closeModal(){ 
   const modalBack = document.getElementById('modalBack');
   const modalContent = document.getElementById('modalContent');
-  if(modalBack) modalBack.style.display = 'none'; 
-  if(modalContent) modalContent.innerHTML = ''; 
+  if(modalBack) modalBack.style.display = 'none'; 
+  if(modalContent) modalContent.innerHTML = ''; 
 }
 
 /* ------------------ STATE (Persistência com localStorage) ------------------ */
@@ -72,9 +72,16 @@ function login(username, password){
     save('saqua.currentUser', u);
     // ATUALIZA O ESTADO LOCAL
     STATE.currentUser = {...u};
-    
-    // Tenta renderizar se o elemento existir (útil no index.html)
+    
+    // Tenta renderizar se o elemento existir (útil no home.html)
     if(document.getElementById('currentUser')) renderTop();
+    
+    // ✅ AJUSTE 1: Redireciona para home.html se estiver na página de login (index.html)
+    const isLoginPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/');
+    if(isLoginPage){
+        window.location.href = 'home.html';
+    }
+
     return true;
   }
   return false;
@@ -82,26 +89,26 @@ function login(username, password){
 
 
   /**
- * CORREÇÃO APLICADA AQUI: Garante que o usuário seja redirecionado para login.html
- * a menos que já esteja na página de login.
- */
+ * CORREÇÃO APLICADA AQUI: Garante que o usuário seja redirecionado para login.html
+ * a menos que já esteja na página de login.
+ */
 function logout(){
   // REMOVE O ESTADO DO LOCALSTORAGE
   localStorage.removeItem('saqua.currentUser');
   // ATUALIZA O ESTADO LOCAL
   STATE.currentUser = null;
-  
+  
   // Tenta limpar o hash da URL se houver algum estado de rota
   if(window.location.hash) {
     window.location.hash = '';
   }
 
-  // Redireciona para 'login.html', a menos que já esteja nela
-  if(!window.location.pathname.endsWith('login.html')){
-    window.location.href = 'login.html';
+  // ✅ AJUSTE: Redireciona para 'index.html' (que agora é o seu login), a menos que já esteja nela
+  if(!window.location.pathname.endsWith('index.html')){
+    window.location.href = 'index.html';
   } else {
-    // Se já está em login.html, apenas re-renderiza o topo/interface de login
-    if(document.getElementById('currentUser')) renderTop(); 
+    // Se já está em index.html, apenas re-renderiza o topo/interface de login
+    if(document.getElementById('currentUser')) renderTop(); 
   }
 }
 
@@ -110,7 +117,7 @@ function renderRestrictedLoginModal(modal, role){
   const modalTitle = role === 'vendor' ? 'Acesso Vendedor' : 'Acesso Admin';
   const placeholderUser = role === 'vendor' ? 'vendedor1' : 'admin';
   const placeholderPass = role === 'vendor' ? 'senha123' : 'admin123';
-  
+  
   modal.innerHTML = `
     <h3>${modalTitle}</h3>
     <p class="muted">Acesso restrito. Credenciais fornecidas pelo administrador.</p>
@@ -129,10 +136,11 @@ function renderRestrictedLoginModal(modal, role){
     if(login(username, password)){
       if(STATE.currentUser.role === role){
         closeModal();
-        window.location.href = 'index.html';
+        // ✅ AJUSTE 2: Redireciona para 'home.html' (a nova página principal)
+        window.location.href = 'home.html'; 
       } else {
         alert(`Usuário encontrado, mas não é ${role.toUpperCase()}.`);
-        logout(); 
+        logout(); 
       }
     } else {
       alert('Falha no login. Verifique seu usuário e senha.');
@@ -167,14 +175,15 @@ function renderRegisterClientModal(modal){
       alert('Este nome de usuário já está em uso.');
       return;
     }
-    
+    
     // Cadastra e loga
     users.push({ id: uid(), role: 'client', username, password });
     save('saqua.users', users);
 
     if(login(username, password)){
       closeModal();
-      window.location.href = 'index.html';
+      // ✅ AJUSTE 3: Redireciona para 'home.html' (a nova página principal)
+      window.location.href = 'home.html'; 
     } else {
       alert('Erro ao finalizar login. Tente novamente.');
     }
@@ -183,30 +192,29 @@ function renderRegisterClientModal(modal){
 
 /* ------------------ Render top & sidebar actions (AJUSTE NO INDEX.HTML) ------------------ */
 function renderTop(){
-    const el = document.getElementById('currentUser');
-    const logoutBtn = document.getElementById('btn-logout'); // Captura o botão
+    const el = document.getElementById('currentUser');
+    const logoutBtn = document.getElementById('btn-logout'); // Captura o botão
 
-    // Se não estiver logado no index.html, redireciona
-    if(!STATE.currentUser){
-        // ... (código existente) ...
-        if(el) el.textContent = 'Visitante';
-        if(logoutBtn) logoutBtn.style.display = 'none'; // Usa a variável capturada
-        return; 
-    }
-    
-    // Se estiver logado:
-    if(el) el.textContent = `${STATE.currentUser.role.toUpperCase()}: ${STATE.currentUser.username}`;
-    
-    // CORREÇÃO CRÍTICA AQUI: 
-    if(logoutBtn) {
-        logoutBtn.style.display = 'inline-block';
-        // ADICIONE ISTO: Conecta o botão de logout à função logout()
-        logoutBtn.onclick = logout; 
-    }
-    // Fim da correção
-    
-    renderSidebarActions();
-    renderFeed();
+    // Se não estiver logado, redireciona (OBS: o redirecionamento principal ocorre no login/logout)
+    if(!STATE.currentUser){
+        if(el) el.textContent = 'Visitante';
+        if(logoutBtn) logoutBtn.style.display = 'none'; // Usa a variável capturada
+        return; 
+    }
+    
+    // Se estiver logado:
+    if(el) el.textContent = `${STATE.currentUser.role.toUpperCase()}: ${STATE.currentUser.username}`;
+    
+    // CORREÇÃO CRÍTICA AQUI: 
+    if(logoutBtn) {
+        logoutBtn.style.display = 'inline-block';
+        // ADICIONE ISTO: Conecta o botão de logout à função logout()
+        logoutBtn.onclick = logout; 
+    }
+    // Fim da correção
+    
+    renderSidebarActions();
+    renderFeed();
 }
 
 // ... O restante das funções do seu script.js segue abaixo, pois já estavam no snippet fornecido.
@@ -362,7 +370,7 @@ function renderFeed(){
   const postsAll = load('saqua.posts', []).slice().sort((a,b) => b.createdAt - a.createdAt);
   const vendors = load('saqua.vendors', []);
   const feedEl = document.getElementById('feedArea');
-  // Verifica se está no index.html. Se não, retorna.
+  // Verifica se está no home.html (nova página principal). Se não, retorna.
   if(!feedEl) return;
   feedEl.innerHTML = '';
 
@@ -571,7 +579,7 @@ function renderVendorProfileModal(modal){
     vendor.whatsapp = modal.querySelector('#v_wh').value.trim();
     vendor.description = modal.querySelector('#v_desc').value.trim();
     vendor.workingHours = modal.querySelector('#v_hours').value.trim();
-    
+    
     const fileInput = modal.querySelector('#v_avatar');
     if(fileInput.files && fileInput.files[0]){
       vendor.avatarDataUrl = await new Promise(res=>{
@@ -724,6 +732,13 @@ function renderAdminCreateVendor(modal){
 
 function renderAdminListVendors(modal){
   const vendors = load('saqua.vendors', []);
+
+// ... O restante da função 'renderAdminListVendors' (que foi cortada no seu envio) continuaria aqui.
+// Como não tenho o resto, o código termina aqui com o que você enviou.
+}
+
+function renderAdminListVendors(modal){
+  const vendors = load('saqua.vendors', []);
   const users = load('saqua.users', []);
   modal.innerHTML = `<h3>Empresas cadastradas (${vendors.length})</h3>
     <div id="adm_list" style="max-height:400px; overflow:auto;"></div>
@@ -810,7 +825,7 @@ const p = document.getElementById('login_password').value;
 
 if(login(u, p)){
 if(['client', 'vendor', 'admin'].includes(STATE.currentUser.role)){
-window.location.href = 'index.html';
+window.location.href = 'home.html';
 } else {
 alert('Erro: Tipo de usuário desconhecido.');
 logout();
