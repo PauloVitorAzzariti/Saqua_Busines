@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Saquabusines — Acesso</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="login.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body onload="seedInitialData()">
+    <div class="login-page">
+        <div class="login-form-card">
+            <div class="login-header">
+                <img 
+                    src="Img/Icone SB.png" 
+                    alt="Logo Saquabusines" 
+                    class="app-logo"
+                    style="margin: 0 auto 10px; width: 48px; height: 48px; object-fit: cover; border-radius: 8px;">
+                <h2>Bem-vindo ao Saquabusines</h2>
+                <p>Entre com suas credenciais ou cadastre-se como cliente.</p>
+            </div>
+
+   <div class="login-input-group">
+    <label>Usuário (Cliente)</label>
+    <input type="text" id="login_username" placeholder="cliente">
+    <label>Senha</label>
+    <input type="password" id="login_password" placeholder="cliente123">
+    </div>
+
+    <button class="btn" id="btn-login-cliente">Entrar (Cliente)</button>
+
+    <div style="display:flex; justify-content: space-between; align-items: center; margin: 10px 0;">
+    <span class="muted" style="flex:1; border-top: 1px solid var(--border)"></span>
+    <span class="muted" style="margin: 0 10px;">Ou</span>
+    <span class="muted" style="flex:1; border-top: 1px solid var(--border)"></span>
+    </div>
+
+    <button class="ghost" id="btn-cadastro-cliente">Sou Novo Cliente (Cadastre-se)</button>
+
+<div style="display:flex; gap: 8px; margin-top: 10px;">
+<button class="ghost" id="btn-login-vendor-open" style="flex:1; font-size: 13px;">Acesso Vendedor</button>
+<button class="ghost" id="btn-login-admin-open" style="flex:1; font-size: 13px;">Acesso Admin</button>
+</div>
+</div>
+</div>
+
+<div class="modal-back" id="modalBack" style="display:none;">
+<div class="modal" id="modalContent"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
