@@ -577,6 +577,7 @@ function renderVendorProfileModal(modal){
   modal.innerHTML = `<h3>Editar Perfil de Vendedor: ${escapeHTML(vendor.name)}</h3>
     <label>Nome da empresa</label><input id="v_name" value="${escapeHTML(vendor.name)}">
     <label>Categoria</label><input id="v_cat" value="${escapeHTML(vendor.category||'')}">
+    vendor.locationUrl = modal.querySelector('#v_loc_url').value.trim(); // ✅ NOVO SALVAMENTO
     <label>Endereço</label><input id="v_addr" value="${escapeHTML(vendor.address||'')}">
     <label>Link de localização (Ex: Google Maps)</label><input id="v_loc_url" value="${escapeHTML(vendor.locationUrl||'')}" placeholder="https://maps.app.goo.gl/...">
     <label>WhatsApp (+55...)</label><input id="v_wh" value="${escapeHTML(vendor.whatsapp||'')}">
@@ -858,5 +859,6 @@ document.getElementById('btn-cadastro-cliente').onclick = () => openModal(render
 // 3. Botões de Acesso Restrito (Chama função do script.js)
 document.getElementById('btn-login-vendor-open').onclick = () => openModal(modal => renderRestrictedLoginModal(modal, 'vendor'));
 document.getElementById('btn-login-admin-open').onclick = () => openModal(modal => renderRestrictedLoginModal(modal, 'admin'));
+
 
 
