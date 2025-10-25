@@ -590,6 +590,7 @@ function renderVendorProfileModal(modal){
       <button class="btn" id="v_save">Salvar Alterações</button>
     </div>`;
 
+
   modal.querySelector('#v_save').onclick = async () => {
     vendor.name = modal.querySelector('#v_name').value.trim();
     vendor.category = modal.querySelector('#v_cat').value.trim();
@@ -859,6 +860,4 @@ document.getElementById('btn-cadastro-cliente').onclick = () => openModal(render
 // 3. Botões de Acesso Restrito (Chama função do script.js)
 document.getElementById('btn-login-vendor-open').onclick = () => openModal(modal => renderRestrictedLoginModal(modal, 'vendor'));
 document.getElementById('btn-login-admin-open').onclick = () => openModal(modal => renderRestrictedLoginModal(modal, 'admin'));
-
-
 
