@@ -15,7 +15,7 @@ function seedInitialData(){
       { id:'v1', name:'Mercadão Central', description:'Produtos frescos, entregas rápidas', category:'Mercado', address:'Rua A, 123', whatsapp:'+5511999991111', avatarDataUrl:'', products:[
          {id:uid(), title:'Arroz 5kg', desc:'Arroz comb. 5kg', price:'R$24,90', image:''},
          {id:uid(), title:'Cerveja 350ml', desc:'Lata gelada', price:'R$4,50', image:''}
-      ], workingHours:'08:00 - 21:00', featured:true },
+      ], workingHours:'08:00 - 21:00', featured:true, locationUrl:'https://maps.app.goo.gl/exemplo123' }, // ✅ ADICIONADO AQUI
       { id:'v2', name:'Sushix', description:'Sushi premium e combos', category:'Comida', address:'Av. B, 45', whatsapp:'+5511988882222', avatarDataUrl:'', products:[
          {id:uid(), title:'Combo 8 peças', desc:'Salmão + atum', price:'R$49,90', image:''}
       ], workingHours:'11:30 - 23:00', featured:false },
@@ -479,6 +479,7 @@ function renderFeed(){
       }
     };
 
+    // ... dentro de renderFeed()
     // Ver perfil
     const viewProfileBtn = postCard.querySelector('.view-profile');
     if(viewProfileBtn){
@@ -508,16 +509,31 @@ function renderFeed(){
             </div>
             <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-start">
               ${vendor.whatsapp ? `<button class="btn" id="contactWhatsapp">Contatar via WhatsApp</button>` : ''}
+              ${vendor.locationUrl ? `<button class="btn" id="viewRoute">Ver Rota</button>` : ''} // ✅ NOVO BOTÃO
               <button class="ghost" onclick="closeModal()">Fechar</button>
             </div>
           `;
+
+          // Lógica para o botão WhatsApp (existente)
           const btn = modal.querySelector('#contactWhatsapp');
           if(btn) btn.onclick = () => {
             window.open(buildWhatsAppUrl(vendor.whatsapp, `Olá ${vendor.name}, vi sua empresa no Saquabusines.`), '_blank');
           };
+
+          // Lógica para o novo botão Rota
+          const routeBtn = modal.querySelector('#viewRoute');
+          if(routeBtn) routeBtn.onclick = () => {
+            if(vendor.locationUrl) {
+              window.open(vendor.locationUrl, '_blank'); // Abre o link de localização
+            } else {
+              alert('Link de localização não configurado.');
+            }
+          }; // ✅ NOVA LÓGICA
+
         });
       };
     }
+// ...
 
     // Saiba mais (only present if admin added link)
     const saibaBtn = postCard.querySelector('.saiba-mais');
@@ -562,6 +578,7 @@ function renderVendorProfileModal(modal){
     <label>Nome da empresa</label><input id="v_name" value="${escapeHTML(vendor.name)}">
     <label>Categoria</label><input id="v_cat" value="${escapeHTML(vendor.category||'')}">
     <label>Endereço</label><input id="v_addr" value="${escapeHTML(vendor.address||'')}">
+    <label>Link de localização (Ex: Google Maps)</label><input id="v_loc_url" value="${escapeHTML(vendor.locationUrl||'')}" placeholder="https://maps.app.goo.gl/...">
     <label>WhatsApp (+55...)</label><input id="v_wh" value="${escapeHTML(vendor.whatsapp||'')}">
     <label>Descrição</label><textarea id="v_desc">${escapeHTML(vendor.description||'')}</textarea>
     <label>Horário de atendimento</label><input id="v_hours" value="${escapeHTML(vendor.workingHours||'')}">
@@ -841,4 +858,5 @@ document.getElementById('btn-cadastro-cliente').onclick = () => openModal(render
 // 3. Botões de Acesso Restrito (Chama função do script.js)
 document.getElementById('btn-login-vendor-open').onclick = () => openModal(modal => renderRestrictedLoginModal(modal, 'vendor'));
 document.getElementById('btn-login-admin-open').onclick = () => openModal(modal => renderRestrictedLoginModal(modal, 'admin'));
+
 
